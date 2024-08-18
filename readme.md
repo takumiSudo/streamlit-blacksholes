@@ -73,9 +73,7 @@ A quick tangent for the **BlackSholes Algorithm**:
 
 The Black-Scholes model is a mathematical framework used to price European options, relying on the Black-Scholes equation:
 
-$$
-\frac{\partial V}{\partial t} + \frac{1}{2} \sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + r S \frac{\partial V}{\partial S} - rV = 0
-$$
+$$\frac{\partial V}{\partial t} + \frac{1}{2} \sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + r S \frac{\partial V}{\partial S} - rV = 0$$
 The solution provides closed-form pricing formulas for call and put options, such as for a call option:
 
 $$
@@ -142,6 +140,8 @@ While d1 and d2 do not directly indicate whether the underlying asset price will
 ### Implementing HTML and CSS components
 Now that the meat of the application is finished, we can now focus on how to make it look great and interactive on the web. For this we do need some simple html and css basics to aid our implementation. The goal here is to allow users of the site to tune the parameters, and outputting the values as a heatmap. As prudvi did, we can use a `sidebar` for the parameter tuning and a main display to showcase all of the important statistics. 
 
+![img](img/sidebar.png)
+
 Let us now see how the sidebar can be implemented:
 ```python
 with st.sidebar:
@@ -207,3 +207,63 @@ value = st.slider('Select a value:', min_value=0.0, max_value=100.0, value=50.0,
 - **max_value** (int or float): The maximum value of the slider.
 - **value** (int or float): The initial value or the default position of the slider handle.
 - **step** (int or float): The incremental step between values as the user moves the slider.
+
+As you can see these components are crucial in an interactive website.
+
+### Implementation for the Main Page
+Similiar to the side bar, the main page can be configured to showcase components but now lets do it with dynamically changing values that can be taken from the interactive sidebar. 
+
+```python
+# Table of Inputs
+input_data = {
+    "Current Asset Price": [current_price],
+    "Strike Price": [strike],
+    "Time to Maturity (Years)": [time_to_maturity],
+    "Volatility (σ)": [volatility],
+    "Risk-Free Interest Rate": [interest_rate],
+}
+input_df = pd.DataFrame(input_data)
+st.table(input_df)
+
+# Calculate Call and Put values
+bs_model = BlackScholes(time_to_maturity, strike, current_price, volatility, interest_rate)
+call_price, put_price = bs_model.calculate_prices()
+```
+
+Since the values have already been assigned to be given by the sliders and value inputs on the sidebars, the tables and even the `BlackSholes` class can take the values to do the `call` and `put` calculations.
+This feature of the streamlit application is crucial as there would be no need to set up databases or external caches to store the values anywhere, but to be able to directly plug in the numbers and quickly see the results. 
+
+Lastly, Some CSS components can be additionally added to fancy up the components.
+
+```python
+# Display Call and Put Values in colored tables
+col1, col2 = st.columns([1,1], gap="small")
+
+with col1:
+    # Using the custom class for CALL value
+    st.markdown(f"""
+        <div class="metric-container metric-call">
+            <div>
+                <div class="metric-label">CALL Value</div>
+                <div class="metric-value">${call_price:.2f}</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    # Using the custom class for PUT value
+    st.markdown(f"""
+        <div class="metric-container metric-put">
+            <div>
+                <div class="metric-label">PUT Value</div>
+                <div class="metric-value">${put_price:.2f}</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+```
+
+Here we can see that the page gets divided into 2 columns and which then are injected with CSS components that showcase the call and put prices. 
+
+![img](img/website-main.png)
+
+
